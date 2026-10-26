@@ -61,6 +61,40 @@ final class BezelSelectionTests: XCTestCase {
         }
     }
 
+    func testDownscaledIPadProFeedLoadsBezelAndKeepsSelectionAcrossRotation() async throws {
+        try await withCapture { capture, _ in
+            let landscape = CGSize(width: 1718, height: 1200)
+            let portrait = CGSize(width: 1200, height: 1718)
+            capture.handleFrameSize(landscape)
+            try await waitUntil {
+                capture.profile.id == "ipad-pro-11"
+                    && capture.customFrame?.geometry.screenRect.size == CGSize(width: 2388, height: 1668)
+            }
+            XCTAssertEqual(capture.selectedBezelID, "automatic")
+            XCTAssertNil(capture.customFrameError)
+
+            capture.selectBezel("ipad-pro-11/silver")
+            for size in [portrait, landscape] {
+                capture.handleFrameSize(size)
+                let nativeSize = size.width > size.height
+                    ? CGSize(width: 2388, height: 1668) : CGSize(width: 1668, height: 2388)
+                try await waitUntil {
+                    capture.customFrameName == "iPad Pro 11-inch (2018-2022) · Silver"
+                        && capture.customFrame?.geometry.screenRect.size == nativeSize
+                }
+                XCTAssertEqual(capture.autoDetectedProfile?.id, "ipad-pro-11")
+                XCTAssertEqual(capture.profile.screenSize, nativeSize)
+                XCTAssertEqual(capture.selectedBezelID, "ipad-pro-11/silver")
+            }
+
+            capture.selectBezel("none")
+            capture.handleFrameSize(portrait)
+            XCTAssertEqual(capture.selectedBezelID, "none")
+            XCTAssertEqual(capture.profile.screenSize, CGSize(width: 1668, height: 2388))
+            XCTAssertNil(capture.customFrame)
+        }
+    }
+
     func testLatestChoiceWinsDuringRapidSwitchesAndRotation() async throws {
         try await withCapture { capture, _ in
             capture.handleFrameSize(CGSize(width: 1320, height: 2868))

@@ -13,7 +13,7 @@ Mirror your iPhone or iPad screen on macOS.
 ## Features
 
 - **USB iPhone and iPad mirroring** via the [`kCMIOHardwarePropertyAllowScreenCaptureDevices`](https://developer.apple.com/documentation/coremediaio) trick — same path QuickTime Player uses.
-- **Auto-detected devices** — connect a supported iPhone or iPad, and the app matches it against a catalog of screen-resolution profiles.
+- **Auto-detected devices** — connect a supported iPhone or iPad, and the app matches native or proportionally downscaled capture feeds against its screen-profile catalog. Native resolutions take priority; downscaled feeds use the closest aspect ratio with at most one pixel of rounding error.
 - **Built-in bezel library** — switch instantly between original, code-drawn frames with only the finishes Apple released for each model, using Apple's finish names. Search by model or finish; no downloads needed.
 - **Automatic or no bezel** — start with a frame matching the detected screen, or export the screen alone. Your choice is remembered separately for iPhone and iPad.
 - **Optional custom PNGs** — import your own device frame with a transparent screen cutout.

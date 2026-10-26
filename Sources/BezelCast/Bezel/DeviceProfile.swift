@@ -5,12 +5,13 @@ enum DeviceFamily: Sendable {
     case iPad
 }
 
+/// 保存设备原生屏幕与边框几何，采集流的缩放不改变导出所用的尺寸。
 struct DeviceProfile: Equatable, Sendable {
     let id: String
     let displayName: String
     let family: DeviceFamily
 
-    /// Native screen pixel resolution. Used for matching against the captured feed.
+    /// 屏幕原生像素尺寸；采集流可能已等比例缩小。
     let screenSize: CGSize
     /// Native scale factor used to draw camera cutouts in screen pixels.
     let displayScale: CGFloat
@@ -32,11 +33,6 @@ struct DeviceProfile: Equatable, Sendable {
         min(screenSize.width, screenSize.height) / max(screenSize.width, screenSize.height)
     }
     var isLandscape: Bool { screenSize.width > screenSize.height }
-    var hasPresetFrameGeometry: Bool { family == .iPhone && frameSize != screenSize }
-    var defaultFrameGeometry: FrameGeometry {
-        FrameGeometry(frameSize: frameSize,
-                      screenRect: CGRect(origin: screenOffset, size: screenSize))
-    }
     func scaledCornerRadius(for renderedScreenSize: CGSize) -> CGFloat {
         screenCornerRadius * min(renderedScreenSize.width / screenSize.width,
                                  renderedScreenSize.height / screenSize.height)
@@ -60,10 +56,8 @@ struct DeviceProfile: Equatable, Sendable {
 }
 
 extension DeviceProfile {
-    /// Catalog of recognized devices. Order is user-facing: newest generation
-    /// first, then Pro Max, Pro, Air/Plus, standard, e, mini. detect(for:) returns
-    /// the first resolution match, so models sharing a resolution must keep
-    /// their newest/default choice first.
+    /// 机型按新款优先，再按 Pro Max、Pro、Air/Plus、标准款、e、mini 排列。
+    /// 相同原生分辨率默认匹配首项，因此最新或默认机型必须排在前面。
     static let catalog: [DeviceProfile] = [
         // Released September 2026. Native resolutions verified against
         // https://www.apple.com/iphone-18-pro/specs/.
@@ -316,19 +310,30 @@ extension DeviceProfile {
         )
     }
 
-    /// Match the captured feed resolution to a known iPhone or iPad profile.
+    /// 优先匹配原生分辨率，再识别等比例缩小的采集流；返回原生几何供边框和导出使用。
     static func detect(for capturedSize: CGSize) -> DeviceProfile? {
+        guard capturedSize.width.isFinite, capturedSize.height.isFinite,
+              capturedSize.width > 0, capturedSize.height > 0 else { return nil }
+        let shortSide = min(capturedSize.width, capturedSize.height)
+        let longSide = max(capturedSize.width, capturedSize.height)
+        let landscape = capturedSize.width > capturedSize.height
+
         if let exact = catalog.first(where: { profile in
-            abs(profile.screenSize.width - capturedSize.width) < 1
-                && abs(profile.screenSize.height - capturedSize.height) < 1
+            abs(profile.screenSize.width - shortSide) < 1
+                && abs(profile.screenSize.height - longSide) < 1
         }) {
-            return exact.withOrientation(landscape: capturedSize.width > capturedSize.height)
+            return exact.withOrientation(landscape: landscape)
         }
 
-        return catalog.first { profile in
-            abs(profile.screenSize.width - capturedSize.height) < 1
-                && abs(profile.screenSize.height - capturedSize.width) < 1
-        }?.withOrientation(landscape: capturedSize.width > capturedSize.height)
+        // 缩放后按短边的像素误差取最近机型，避免相近比例被目录顺序误判。
+        let closest = catalog.filter { profile in
+            shortSide < profile.screenSize.width && longSide < profile.screenSize.height
+        }.map { profile in
+            (profile: profile, pixelError: abs(longSide * profile.aspectRatio - shortSide))
+        }.min { $0.pixelError < $1.pixelError }
+        // 只容许采集尺寸取整造成的 1 像素误差，不使用边框选择器的宽松比例容差。
+        guard let closest, closest.pixelError <= 1 else { return nil }
+        return closest.profile.withOrientation(landscape: landscape)
     }
 
     func oriented(matching size: CGSize) -> DeviceProfile {

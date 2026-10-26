@@ -32,6 +32,18 @@ final class BezelEdgeAlignmentTests: XCTestCase {
                           capturedPortraitSize: CGSize(width: 1206, height: 2622), movie: true)
     }
 
+    func testDownscaledIPadProFeedSealsItsBezelAcrossEveryOutput() throws {
+        let capturedSize = CGSize(width: 1200, height: 1718)
+        let detected = try XCTUnwrap(DeviceProfile.detect(for: capturedSize))
+        XCTAssertEqual(detected.id, "ipad-pro-11")
+        for longSide: CGFloat? in [nil, 601, 1800] {
+            try auditBuiltIns(previewLongSide: longSide, profileIDs: [detected.id],
+                              capturedPortraitSize: capturedSize)
+        }
+        try auditBuiltIns(previewLongSide: nil, profileIDs: [detected.id],
+                          capturedPortraitSize: capturedSize, movie: true)
+    }
+
     func testBrightCanvasDoesNotLeakThroughTheInnerBezelEdge() throws {
         let profile = try XCTUnwrap(DeviceProfile.catalog.first { $0.id == "iphone-17-pro" })
         let option = try XCTUnwrap(BezelLibrary.automatic(for: profile))
