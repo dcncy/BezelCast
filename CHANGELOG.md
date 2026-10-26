@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1
+
+- Fixed rejection of proportionally downscaled capture feeds, including iPad Pro at 1718×1200 and 1200×1718. Native resolutions still take priority; downscaled feeds match the closest screen aspect with at most one pixel of rounding error.
+- Preserved native screen and bezel geometry for previews, PNG screenshots, and recordings. Added regression coverage for detection, rotation, bezel selection, and rendering.
+- Set this fork's bundle identifier to `com.dcncy.BezelCast` and build number to 6. macOS requests camera access separately from the original app; the original app's preferences are not migrated.
+- Included the original MIT license inside the application bundle.
+- Fixed the DMG Gatekeeper check to assess its primary signature after notarization.
+
 ## 0.3.0
 
 - Added capture backgrounds: colors, gradients, locally installed macOS wallpapers, and imported images, with landscape, portrait, and square canvases, padding, and optional shadows.

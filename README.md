@@ -1,10 +1,10 @@
 # BezelCast
 
-I Built this because I didn't want to pay $99 for getbezel.app.
+A fork of [vgnshiyer/BezelCast](https://github.com/vgnshiyer/BezelCast), with fixes for downscaled iPad capture feeds.
 
 Mirror your iPhone or iPad screen on macOS.
 
-[Download the latest release for Apple Silicon Macs](https://github.com/vgnshiyer/BezelCast/releases/latest/download/BezelCast.dmg) · [Release notes](https://github.com/vgnshiyer/BezelCast/releases/latest)
+[Download the latest release for Apple Silicon Macs](https://github.com/dcncy/BezelCast/releases/latest/download/BezelCast.dmg) · [Release notes](https://github.com/dcncy/BezelCast/releases/latest)
 
 <p align="center">
   <img src="Documentation/Images/bezelcast-demo.png" alt="BezelCast capture with an iPhone bezel and a colorful background" width="640">
@@ -51,7 +51,7 @@ Bezel changes apply to the live preview, screenshots, and active recordings. A r
 The fastest path:
 
 ```bash
-git clone https://github.com/vgnshiyer/BezelCast.git
+git clone https://github.com/dcncy/BezelCast.git
 cd BezelCast
 open Package.swift          # opens in Xcode, hit ⌘R
 ```

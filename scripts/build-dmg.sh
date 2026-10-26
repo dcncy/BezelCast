@@ -3,9 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="BezelCast"
-BUNDLE_ID="com.vgnshiyer.BezelCast"
-VERSION="${VERSION:-0.3.0}"
-BUILD_NUMBER="${BUILD_NUMBER:-5}"
+BUNDLE_ID="com.dcncy.BezelCast"
+VERSION="${VERSION:-0.3.1}"
+BUILD_NUMBER="${BUILD_NUMBER:-6}"
 SIGN_IDENTITY="${SIGN_IDENTITY:-}"
 NOTARIZE="${NOTARIZE:-0}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-bezelcast-notary}"
@@ -41,6 +41,8 @@ mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources" "$DMG_ROOT"
 
 cp "$BINARY_PATH" "$APP_DIR/Contents/MacOS/$APP_NAME"
 cp "$ICON_PATH" "$APP_DIR/Contents/Resources/AppIcon.icns"
+# 独立分发的应用内也保留原作者的 MIT 许可。
+cp "$ROOT_DIR/LICENSE" "$APP_DIR/Contents/Resources/LICENSE"
 chmod +x "$APP_DIR/Contents/MacOS/$APP_NAME"
 
 cat > "$APP_DIR/Contents/Info.plist" <<PLIST
@@ -112,7 +114,8 @@ if [[ "$NOTARIZE" == "1" ]]; then
 
     xcrun stapler staple "$DMG_PATH"
     xcrun stapler validate "$DMG_PATH"
-    spctl -a -vv --type open "$DMG_PATH"
+    # 磁盘镜像需要主签名上下文，否则已公证的镜像也会被误判为 Insufficient Context。
+    spctl -a -vv --type open --context context:primary-signature "$DMG_PATH"
 fi
 
 echo "$DMG_PATH"
